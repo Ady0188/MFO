@@ -45,6 +45,8 @@ public sealed class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand
             request.Request.ProductId,
             request.Request.StatusId,
             request.Request.CurrencyId,
+            request.Request.BranchId,
+            request.Request.CuratorId,
             request.Request.DisbursementMethodId,
             request.Request.RepaymentMethodId,
             request.Request.PurposeId,
@@ -92,6 +94,16 @@ public sealed class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand
         if (!await _referenceLookup.CurrencyExistsAsync(request.CurrencyId, cancellationToken))
         {
             missing.Add("Currency");
+        }
+
+        if (!await _referenceLookup.BranchExistsAsync(request.BranchId, cancellationToken))
+        {
+            missing.Add("Branch");
+        }
+
+        if (!await _referenceLookup.EmployeeExistsAsync(request.CuratorId, cancellationToken))
+        {
+            missing.Add("Curator");
         }
 
         if (!await _referenceLookup.DisbursementMethodExistsAsync(request.DisbursementMethodId, cancellationToken))

@@ -18,6 +18,6 @@ public sealed class GetCurrenciesQueryHandler : IRequestHandler<GetCurrenciesQue
     public async Task<IReadOnlyList<CurrencyDto>> Handle(GetCurrenciesQuery request, CancellationToken cancellationToken)
     {
         var items = await _repository.GetAllAsync(cancellationToken);
-        return items.Select(x => new CurrencyDto(x.Id, x.Code, x.Name, x.Symbol, x.IsActive)).ToList();
+        return items.Select(x => new CurrencyDto(x.Id, x.Code, x.NumericCode, x.Name, x.Symbol, x.IsActive)).ToList();
     }
 }

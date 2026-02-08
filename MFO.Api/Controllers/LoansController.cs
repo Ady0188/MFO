@@ -1,5 +1,4 @@
 using MediatR;
-using MFO.Application.Common.Models;
 using MFO.Application.Loans;
 using MFO.Application.Loans.Commands;
 using MFO.Application.Loans.Queries;
@@ -7,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/loans")]
-public sealed class LoansController : ControllerBase
+public sealed class LoansController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -41,14 +39,19 @@ public sealed class LoansController : ControllerBase
     public async Task<ActionResult<LoanDto>> Create(CreateLoanRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateLoanCommand(request), cancellationToken);
-        return MapCommandResult(result, nameof(GetById));
+        if (result.Value is null)
+        {
+            return FromCommandResult(result);
+        }
+
+        return FromCommandResult(result, nameof(GetById), new { id = result.Value.Id });
     }
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<LoanDto>> Update(Guid id, UpdateLoanRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateLoanCommand(id, request), cancellationToken);
-        return MapCommandResult(result, null);
+        return FromCommandResult(result);
     }
 
     [HttpDelete("{id:guid}")]
@@ -58,30 +61,4 @@ public sealed class LoansController : ControllerBase
         return deleted ? NoContent() : NotFound();
     }
 
-    private ActionResult<LoanDto> MapCommandResult(CommandResult<LoanDto> result, string? createdAtAction)
-    {
-        if (result.Error == CommandError.NotFound)
-        {
-            return NotFound();
-        }
-
-        if (result.Error == CommandError.Conflict)
-        {
-            return Conflict("Loan number already exists.");
-        }
-
-        if (result.Error == CommandError.MissingReferences)
-        {
-            return BadRequest($"Missing references: {string.Join(", ", result.MissingReferences)}");
-        }
-
-        if (result.Value is null)
-        {
-            return BadRequest();
-        }
-
-        return createdAtAction is null
-            ? Ok(result.Value)
-            : CreatedAtAction(createdAtAction, new { id = result.Value.Id }, result.Value);
-    }
 }

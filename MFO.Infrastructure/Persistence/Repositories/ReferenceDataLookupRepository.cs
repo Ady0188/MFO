@@ -21,6 +21,12 @@ internal sealed class ReferenceDataLookupRepository : IReferenceDataLookupReposi
     public Task<bool> CurrencyExistsAsync(Guid id, CancellationToken cancellationToken)
         => _dbContext.Currencies.AnyAsync(x => x.Id == id, cancellationToken);
 
+    public Task<bool> BranchExistsAsync(Guid id, CancellationToken cancellationToken)
+        => _dbContext.Branches.AnyAsync(x => x.Id == id, cancellationToken);
+
+    public Task<bool> EmployeeExistsAsync(Guid id, CancellationToken cancellationToken)
+        => _dbContext.Employees.AnyAsync(x => x.Id == id, cancellationToken);
+
     public Task<bool> DisbursementMethodExistsAsync(Guid id, CancellationToken cancellationToken)
         => _dbContext.DisbursementMethods.AnyAsync(x => x.Id == id, cancellationToken);
 
@@ -38,4 +44,26 @@ internal sealed class ReferenceDataLookupRepository : IReferenceDataLookupReposi
 
     public Task<bool> CustomerStatusExistsAsync(Guid id, CancellationToken cancellationToken)
         => _dbContext.CustomerStatuses.AnyAsync(x => x.Id == id, cancellationToken);
+
+    public Task<bool> CustomerTypeExistsAsync(Guid id, CancellationToken cancellationToken)
+        => _dbContext.CustomerTypes.AnyAsync(x => x.Id == id, cancellationToken);
+
+    public Task<bool> LoanTransactionTypeExistsAsync(Guid id, CancellationToken cancellationToken)
+        => _dbContext.LoanTransactionTypes.AnyAsync(x => x.Id == id, cancellationToken);
+
+    public async Task<Guid?> GetLoanStatusIdByCodeAsync(string code, CancellationToken cancellationToken)
+    {
+        return await _dbContext.LoanStatuses
+            .Where(x => x.Code == code)
+            .Select(x => (Guid?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<Guid?> GetLoanTransactionTypeIdByCodeAsync(string code, CancellationToken cancellationToken)
+    {
+        return await _dbContext.LoanTransactionTypes
+            .Where(x => x.Code == code)
+            .Select(x => (Guid?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

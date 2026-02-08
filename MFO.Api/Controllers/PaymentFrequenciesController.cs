@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/payment-frequencies")]
-public sealed class PaymentFrequenciesController : ControllerBase
+public sealed class PaymentFrequenciesController : BaseController
 {
     private readonly IMediator _mediator;
 

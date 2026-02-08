@@ -26,12 +26,13 @@ public sealed class UpdateCurrencyCommandHandler : IRequestHandler<UpdateCurrenc
         }
 
         entity.Code = request.Request.Code;
+        entity.NumericCode = request.Request.NumericCode;
         entity.Name = request.Request.Name;
         entity.Symbol = request.Request.Symbol;
         entity.IsActive = request.Request.IsActive;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CurrencyDto(entity.Id, entity.Code, entity.Name, entity.Symbol, entity.IsActive);
+        return new CurrencyDto(entity.Id, entity.Code, entity.NumericCode, entity.Name, entity.Symbol, entity.IsActive);
     }
 }

@@ -13,6 +13,8 @@ public sealed class Customer : IAggregateRoot
     public string NationalId { get; private set; } = string.Empty;
     public DateOnly DateOfBirth { get; private set; }
     public string PhoneNumber { get; private set; } = string.Empty;
+    public Guid CustomerTypeId { get; private set; }
+    public CustomerType CustomerType { get; private set; } = null!;
     public Guid StatusId { get; private set; }
     public CustomerStatus Status { get; private set; } = null!;
     public ICollection<Loan> Loans { get; private set; } = new List<Loan>();
@@ -22,6 +24,7 @@ public sealed class Customer : IAggregateRoot
         string nationalId,
         DateOnly dateOfBirth,
         string phoneNumber,
+        Guid customerTypeId,
         Guid statusId)
     {
         return new Customer
@@ -31,6 +34,7 @@ public sealed class Customer : IAggregateRoot
             NationalId = nationalId,
             DateOfBirth = dateOfBirth,
             PhoneNumber = phoneNumber,
+            CustomerTypeId = customerTypeId,
             StatusId = statusId
         };
     }
@@ -40,12 +44,14 @@ public sealed class Customer : IAggregateRoot
         string nationalId,
         DateOnly dateOfBirth,
         string phoneNumber,
+        Guid customerTypeId,
         Guid statusId)
     {
         FullName = fullName;
         NationalId = nationalId;
         DateOfBirth = dateOfBirth;
         PhoneNumber = phoneNumber;
+        CustomerTypeId = customerTypeId;
         StatusId = statusId;
     }
 }

@@ -13,6 +13,8 @@ public static class LoanMappings
             loan.ProductId,
             loan.StatusId,
             loan.CurrencyId,
+            loan.BranchId,
+            loan.CuratorId,
             loan.DisbursementMethodId,
             loan.RepaymentMethodId,
             loan.PurposeId,

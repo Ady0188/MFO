@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/penalty-policies")]
-public sealed class PenaltyPoliciesController : ControllerBase
+public sealed class PenaltyPoliciesController : BaseController
 {
     private readonly IMediator _mediator;
 

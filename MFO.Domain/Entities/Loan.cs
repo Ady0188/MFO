@@ -1,4 +1,5 @@
 using MFO.Domain.Common;
+using System;
 
 namespace MFO.Domain.Entities;
 
@@ -18,6 +19,10 @@ public sealed class Loan : IAggregateRoot
     public LoanStatus Status { get; private set; } = null!;
     public Guid CurrencyId { get; private set; }
     public Currency Currency { get; private set; } = null!;
+    public Guid BranchId { get; private set; }
+    public Branch Branch { get; private set; } = null!;
+    public Guid CuratorId { get; private set; }
+    public Employee Curator { get; private set; } = null!;
     public Guid DisbursementMethodId { get; private set; }
     public DisbursementMethod DisbursementMethod { get; private set; } = null!;
     public Guid RepaymentMethodId { get; private set; }
@@ -50,6 +55,8 @@ public sealed class Loan : IAggregateRoot
         Guid productId,
         Guid statusId,
         Guid currencyId,
+        Guid branchId,
+        Guid curatorId,
         Guid disbursementMethodId,
         Guid repaymentMethodId,
         Guid purposeId,
@@ -77,6 +84,8 @@ public sealed class Loan : IAggregateRoot
             ProductId = productId,
             StatusId = statusId,
             CurrencyId = currencyId,
+            BranchId = branchId,
+            CuratorId = curatorId,
             DisbursementMethodId = disbursementMethodId,
             RepaymentMethodId = repaymentMethodId,
             PurposeId = purposeId,
@@ -105,6 +114,8 @@ public sealed class Loan : IAggregateRoot
         Guid productId,
         Guid statusId,
         Guid currencyId,
+        Guid branchId,
+        Guid curatorId,
         Guid disbursementMethodId,
         Guid repaymentMethodId,
         Guid purposeId,
@@ -129,6 +140,8 @@ public sealed class Loan : IAggregateRoot
         ProductId = productId;
         StatusId = statusId;
         CurrencyId = currencyId;
+        BranchId = branchId;
+        CuratorId = curatorId;
         DisbursementMethodId = disbursementMethodId;
         RepaymentMethodId = repaymentMethodId;
         PurposeId = purposeId;
@@ -147,6 +160,31 @@ public sealed class Loan : IAggregateRoot
         DisbursedOn = disbursedOn;
         MaturityOn = maturityOn;
         ClosedOn = closedOn;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void MarkDisbursed(Guid statusId, DateOnly disbursedOn)
+    {
+        StatusId = statusId;
+        DisbursedOn = disbursedOn;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ApplyRepayment(decimal amount, Guid? closedStatusId, DateOnly occurredOn)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        OutstandingPrincipal = Math.Max(0m, OutstandingPrincipal - amount);
+
+        if (OutstandingPrincipal == 0m && closedStatusId.HasValue)
+        {
+            StatusId = closedStatusId.Value;
+            ClosedOn = occurredOn;
+        }
+
         UpdatedAt = DateTime.UtcNow;
     }
 }

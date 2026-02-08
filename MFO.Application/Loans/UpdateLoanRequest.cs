@@ -6,6 +6,8 @@ public sealed record UpdateLoanRequest(
     Guid ProductId,
     Guid StatusId,
     Guid CurrencyId,
+    Guid BranchId,
+    Guid CuratorId,
     Guid DisbursementMethodId,
     Guid RepaymentMethodId,
     Guid PurposeId,

@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/currencies")]
-public sealed class CurrenciesController : ControllerBase
+public sealed class CurrenciesController : BaseController
 {
     private readonly IMediator _mediator;
 

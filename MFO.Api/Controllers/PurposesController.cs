@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/purposes")]
-public sealed class PurposesController : ControllerBase
+public sealed class PurposesController : BaseController
 {
     private readonly IMediator _mediator;
 

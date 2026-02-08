@@ -23,6 +23,7 @@ public sealed class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrenc
         {
             Id = Guid.NewGuid(),
             Code = request.Request.Code,
+            NumericCode = request.Request.NumericCode,
             Name = request.Request.Name,
             Symbol = request.Request.Symbol,
             IsActive = request.Request.IsActive
@@ -31,6 +32,6 @@ public sealed class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrenc
         await _repository.AddAsync(entity, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CurrencyDto(entity.Id, entity.Code, entity.Name, entity.Symbol, entity.IsActive);
+        return new CurrencyDto(entity.Id, entity.Code, entity.NumericCode, entity.Name, entity.Symbol, entity.IsActive);
     }
 }

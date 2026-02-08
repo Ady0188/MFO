@@ -19,6 +19,6 @@ public sealed class GetCurrencyByIdQueryHandler : IRequestHandler<GetCurrencyByI
     {
         var item = await _repository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
-        return item is null ? null : new CurrencyDto(item.Id, item.Code, item.Name, item.Symbol, item.IsActive);
+        return item is null ? null : new CurrencyDto(item.Id, item.Code, item.NumericCode, item.Name, item.Symbol, item.IsActive);
     }
 }

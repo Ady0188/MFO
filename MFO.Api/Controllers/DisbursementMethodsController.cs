@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/disbursement-methods")]
-public sealed class DisbursementMethodsController : ControllerBase
+public sealed class DisbursementMethodsController : BaseController
 {
     private readonly IMediator _mediator;
 

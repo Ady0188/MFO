@@ -21,6 +21,7 @@ internal static class DependencyInjection
         services.AddDbContext<MfoDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
         services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<ILoanAccountRepository, LoanAccountRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IReferenceDataLookupRepository, ReferenceDataLookupRepository>();
         services.AddScoped(typeof(ICrudRepository<>), typeof(CrudRepository<>));

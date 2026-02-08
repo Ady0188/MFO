@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/loan-statuses")]
-public sealed class LoanStatusesController : ControllerBase
+public sealed class LoanStatusesController : BaseController
 {
     private readonly IMediator _mediator;
 

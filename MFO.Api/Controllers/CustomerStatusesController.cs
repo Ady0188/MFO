@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MFO.Api.Controllers;
 
-[ApiController]
 [Route("api/customer-statuses")]
-public sealed class CustomerStatusesController : ControllerBase
+public sealed class CustomerStatusesController : BaseController
 {
     private readonly IMediator _mediator;
 
