@@ -1,4 +1,5 @@
-﻿using MFO.Application.Authentication;
+using MFO.Application.Authentication;
+using MFO.Application.Common.Interfaces;
 using MFO.Domain.Entities;
 using MFO.Infrastructure.Authentication;
 using MFO.Infrastructure.Persistence;
@@ -8,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace MFO.Infrastructure;
@@ -19,6 +19,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<MfoDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<MfoDbContext>());
 
         services.AddIdentityCore<ApplicationUser>(options =>
         {

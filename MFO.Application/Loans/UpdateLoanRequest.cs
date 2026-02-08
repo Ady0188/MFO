@@ -1,0 +1,26 @@
+namespace MFO.Application.Loans;
+
+public sealed record UpdateLoanRequest(
+    string LoanNumber,
+    Guid CustomerId,
+    Guid ProductId,
+    Guid StatusId,
+    Guid CurrencyId,
+    Guid DisbursementMethodId,
+    Guid RepaymentMethodId,
+    Guid PurposeId,
+    Guid PaymentFrequencyId,
+    Guid PenaltyPolicyId,
+    decimal PrincipalAmount,
+    decimal InterestRate,
+    decimal FeesAmount,
+    decimal PenaltyRate,
+    decimal TotalPayable,
+    decimal OutstandingPrincipal,
+    decimal OutstandingInterest,
+    int TermMonths,
+    DateOnly IssuedOn,
+    DateOnly? ApprovedOn,
+    DateOnly? DisbursedOn,
+    DateOnly? MaturityOn,
+    DateOnly? ClosedOn);

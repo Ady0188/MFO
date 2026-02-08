@@ -7,5 +7,7 @@ public sealed class Customer
     public string NationalId { get; set; } = string.Empty;
     public DateOnly DateOfBirth { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
+    public Guid StatusId { get; set; }
+    public CustomerStatus Status { get; set; } = null!;
     public ICollection<Loan> Loans { get; set; } = new List<Loan>();
 }
