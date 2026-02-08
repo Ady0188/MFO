@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.LoanStatuses.Commands;
 
@@ -8,16 +8,18 @@ public sealed record UpdateLoanStatusCommand(Guid Id, LoanStatusRequest Request)
 
 public sealed class UpdateLoanStatusCommandHandler : IRequestHandler<UpdateLoanStatusCommand, LoanStatusDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanStatus> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateLoanStatusCommandHandler(IAppDbContext dbContext)
+    public UpdateLoanStatusCommandHandler(ICrudRepository<LoanStatus> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LoanStatusDto?> Handle(UpdateLoanStatusCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.LoanStatuses.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -27,7 +29,7 @@ public sealed class UpdateLoanStatusCommandHandler : IRequestHandler<UpdateLoanS
         entity.Name = request.Request.Name;
         entity.IsClosed = request.Request.IsClosed;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new LoanStatusDto(entity.Id, entity.Code, entity.Name, entity.IsClosed);
     }

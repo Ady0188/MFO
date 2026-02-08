@@ -6,10 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\MFO.Application\MFO.Application.csproj" />
-		<ProjectReference Include="..\MFO.Domain\MFO.Domain.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MFO.Application\MFO.Application.csproj" />
+    <ProjectReference Include="..\MFO.Domain\MFO.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>MFO.Api</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />

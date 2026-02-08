@@ -8,11 +8,13 @@ public sealed record CreateLoanStatusCommand(LoanStatusRequest Request) : IReque
 
 public sealed class CreateLoanStatusCommandHandler : IRequestHandler<CreateLoanStatusCommand, LoanStatusDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanStatus> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateLoanStatusCommandHandler(IAppDbContext dbContext)
+    public CreateLoanStatusCommandHandler(ICrudRepository<LoanStatus> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<LoanStatusDto> Handle(CreateLoanStatusCommand request, CancellationToken cancellationToken)
@@ -25,8 +27,8 @@ public sealed class CreateLoanStatusCommandHandler : IRequestHandler<CreateLoanS
             IsClosed = request.Request.IsClosed
         };
 
-        _dbContext.LoanStatuses.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new LoanStatusDto(entity.Id, entity.Code, entity.Name, entity.IsClosed);
     }

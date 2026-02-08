@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
 
 namespace MFO.Application.Loans.Queries;
@@ -8,18 +7,16 @@ public sealed record GetLoanByIdQuery(Guid Id) : IRequest<LoanDto?>;
 
 public sealed class GetLoanByIdQueryHandler : IRequestHandler<GetLoanByIdQuery, LoanDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ILoanRepository _loanRepository;
 
-    public GetLoanByIdQueryHandler(IAppDbContext dbContext)
+    public GetLoanByIdQueryHandler(ILoanRepository loanRepository)
     {
-        _dbContext = dbContext;
+        _loanRepository = loanRepository;
     }
 
     public async Task<LoanDto?> Handle(GetLoanByIdQuery request, CancellationToken cancellationToken)
     {
-        var loan = await _dbContext.Loans
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var loan = await _loanRepository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
         return loan is null ? null : LoanMappings.ToDto(loan);
     }

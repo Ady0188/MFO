@@ -8,11 +8,13 @@ public sealed record CreatePurposeCommand(ReferenceItemRequest Request) : IReque
 
 public sealed class CreatePurposeCommandHandler : IRequestHandler<CreatePurposeCommand, ReferenceItemDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Purpose> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePurposeCommandHandler(IAppDbContext dbContext)
+    public CreatePurposeCommandHandler(ICrudRepository<Purpose> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ReferenceItemDto> Handle(CreatePurposeCommand request, CancellationToken cancellationToken)
@@ -25,8 +27,8 @@ public sealed class CreatePurposeCommandHandler : IRequestHandler<CreatePurposeC
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.Purposes.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ReferenceItemDto(entity.Id, entity.Code, entity.Name, entity.IsActive);
     }

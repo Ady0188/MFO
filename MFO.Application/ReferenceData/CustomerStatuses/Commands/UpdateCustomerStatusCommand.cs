@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.CustomerStatuses.Commands;
 
@@ -8,16 +8,18 @@ public sealed record UpdateCustomerStatusCommand(Guid Id, ReferenceItemRequest R
 
 public sealed class UpdateCustomerStatusCommandHandler : IRequestHandler<UpdateCustomerStatusCommand, ReferenceItemDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<CustomerStatus> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateCustomerStatusCommandHandler(IAppDbContext dbContext)
+    public UpdateCustomerStatusCommandHandler(ICrudRepository<CustomerStatus> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ReferenceItemDto?> Handle(UpdateCustomerStatusCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.CustomerStatuses.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -27,7 +29,7 @@ public sealed class UpdateCustomerStatusCommandHandler : IRequestHandler<UpdateC
         entity.Name = request.Request.Name;
         entity.IsActive = request.Request.IsActive;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ReferenceItemDto(entity.Id, entity.Code, entity.Name, entity.IsActive);
     }

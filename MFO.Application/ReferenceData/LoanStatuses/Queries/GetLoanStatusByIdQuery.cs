@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.LoanStatuses.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetLoanStatusByIdQuery(Guid Id) : IRequest<LoanStatusDto?>;
 
 public sealed class GetLoanStatusByIdQueryHandler : IRequestHandler<GetLoanStatusByIdQuery, LoanStatusDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanStatus> _repository;
 
-    public GetLoanStatusByIdQueryHandler(IAppDbContext dbContext)
+    public GetLoanStatusByIdQueryHandler(ICrudRepository<LoanStatus> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<LoanStatusDto?> Handle(GetLoanStatusByIdQuery request, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.LoanStatuses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var item = await _repository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
         return item is null ? null : new LoanStatusDto(item.Id, item.Code, item.Name, item.IsClosed);
     }

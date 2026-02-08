@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
 using MFO.Application.Common.Models;
 using MFO.Domain.Entities;
@@ -10,16 +9,26 @@ public sealed record CreateLoanCommand(CreateLoanRequest Request) : IRequest<Com
 
 public sealed class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand, CommandResult<LoanDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ILoanRepository _loanRepository;
+    private readonly ICustomerRepository _customerRepository;
+    private readonly IReferenceDataLookupRepository _referenceLookup;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateLoanCommandHandler(IAppDbContext dbContext)
+    public CreateLoanCommandHandler(
+        ILoanRepository loanRepository,
+        ICustomerRepository customerRepository,
+        IReferenceDataLookupRepository referenceLookup,
+        IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _loanRepository = loanRepository;
+        _customerRepository = customerRepository;
+        _referenceLookup = referenceLookup;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CommandResult<LoanDto>> Handle(CreateLoanCommand request, CancellationToken cancellationToken)
     {
-        if (await _dbContext.Loans.AnyAsync(x => x.LoanNumber == request.Request.LoanNumber, cancellationToken))
+        if (await _loanRepository.LoanNumberExistsAsync(request.Request.LoanNumber, null, cancellationToken))
         {
             return CommandResult<LoanDto>.Conflict();
         }
@@ -30,37 +39,33 @@ public sealed class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand
             return CommandResult<LoanDto>.Missing(missing);
         }
 
-        var loan = new Loan
-        {
-            Id = Guid.NewGuid(),
-            LoanNumber = request.Request.LoanNumber,
-            CustomerId = request.Request.CustomerId,
-            ProductId = request.Request.ProductId,
-            StatusId = request.Request.StatusId,
-            CurrencyId = request.Request.CurrencyId,
-            DisbursementMethodId = request.Request.DisbursementMethodId,
-            RepaymentMethodId = request.Request.RepaymentMethodId,
-            PurposeId = request.Request.PurposeId,
-            PaymentFrequencyId = request.Request.PaymentFrequencyId,
-            PenaltyPolicyId = request.Request.PenaltyPolicyId,
-            PrincipalAmount = request.Request.PrincipalAmount,
-            InterestRate = request.Request.InterestRate,
-            FeesAmount = request.Request.FeesAmount,
-            PenaltyRate = request.Request.PenaltyRate,
-            TotalPayable = request.Request.TotalPayable,
-            OutstandingPrincipal = request.Request.OutstandingPrincipal,
-            OutstandingInterest = request.Request.OutstandingInterest,
-            TermMonths = request.Request.TermMonths,
-            IssuedOn = request.Request.IssuedOn,
-            ApprovedOn = request.Request.ApprovedOn,
-            DisbursedOn = request.Request.DisbursedOn,
-            MaturityOn = request.Request.MaturityOn,
-            ClosedOn = request.Request.ClosedOn,
-            CreatedAt = DateTime.UtcNow
-        };
+        var loan = Loan.Create(
+            request.Request.LoanNumber,
+            request.Request.CustomerId,
+            request.Request.ProductId,
+            request.Request.StatusId,
+            request.Request.CurrencyId,
+            request.Request.DisbursementMethodId,
+            request.Request.RepaymentMethodId,
+            request.Request.PurposeId,
+            request.Request.PaymentFrequencyId,
+            request.Request.PenaltyPolicyId,
+            request.Request.PrincipalAmount,
+            request.Request.InterestRate,
+            request.Request.FeesAmount,
+            request.Request.PenaltyRate,
+            request.Request.TotalPayable,
+            request.Request.OutstandingPrincipal,
+            request.Request.OutstandingInterest,
+            request.Request.TermMonths,
+            request.Request.IssuedOn,
+            request.Request.ApprovedOn,
+            request.Request.DisbursedOn,
+            request.Request.MaturityOn,
+            request.Request.ClosedOn);
 
-        _dbContext.Loans.Add(loan);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _loanRepository.AddAsync(loan, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return CommandResult<LoanDto>.Success(LoanMappings.ToDto(loan));
     }
@@ -69,47 +74,47 @@ public sealed class CreateLoanCommandHandler : IRequestHandler<CreateLoanCommand
     {
         var missing = new List<string>();
 
-        if (!await _dbContext.Customers.AnyAsync(x => x.Id == request.CustomerId, cancellationToken))
+        if (!await _customerRepository.ExistsAsync(request.CustomerId, cancellationToken))
         {
             missing.Add("Customer");
         }
 
-        if (!await _dbContext.LoanProducts.AnyAsync(x => x.Id == request.ProductId, cancellationToken))
+        if (!await _referenceLookup.LoanProductExistsAsync(request.ProductId, cancellationToken))
         {
             missing.Add("LoanProduct");
         }
 
-        if (!await _dbContext.LoanStatuses.AnyAsync(x => x.Id == request.StatusId, cancellationToken))
+        if (!await _referenceLookup.LoanStatusExistsAsync(request.StatusId, cancellationToken))
         {
             missing.Add("LoanStatus");
         }
 
-        if (!await _dbContext.Currencies.AnyAsync(x => x.Id == request.CurrencyId, cancellationToken))
+        if (!await _referenceLookup.CurrencyExistsAsync(request.CurrencyId, cancellationToken))
         {
             missing.Add("Currency");
         }
 
-        if (!await _dbContext.DisbursementMethods.AnyAsync(x => x.Id == request.DisbursementMethodId, cancellationToken))
+        if (!await _referenceLookup.DisbursementMethodExistsAsync(request.DisbursementMethodId, cancellationToken))
         {
             missing.Add("DisbursementMethod");
         }
 
-        if (!await _dbContext.RepaymentMethods.AnyAsync(x => x.Id == request.RepaymentMethodId, cancellationToken))
+        if (!await _referenceLookup.RepaymentMethodExistsAsync(request.RepaymentMethodId, cancellationToken))
         {
             missing.Add("RepaymentMethod");
         }
 
-        if (!await _dbContext.Purposes.AnyAsync(x => x.Id == request.PurposeId, cancellationToken))
+        if (!await _referenceLookup.PurposeExistsAsync(request.PurposeId, cancellationToken))
         {
             missing.Add("Purpose");
         }
 
-        if (!await _dbContext.PaymentFrequencies.AnyAsync(x => x.Id == request.PaymentFrequencyId, cancellationToken))
+        if (!await _referenceLookup.PaymentFrequencyExistsAsync(request.PaymentFrequencyId, cancellationToken))
         {
             missing.Add("PaymentFrequency");
         }
 
-        if (!await _dbContext.PenaltyPolicies.AnyAsync(x => x.Id == request.PenaltyPolicyId, cancellationToken))
+        if (!await _referenceLookup.PenaltyPolicyExistsAsync(request.PenaltyPolicyId, cancellationToken))
         {
             missing.Add("PenaltyPolicy");
         }

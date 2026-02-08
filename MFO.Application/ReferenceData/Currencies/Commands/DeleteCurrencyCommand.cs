@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Currencies.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeleteCurrencyCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeleteCurrencyCommandHandler : IRequestHandler<DeleteCurrencyCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Currency> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteCurrencyCommandHandler(IAppDbContext dbContext)
+    public DeleteCurrencyCommandHandler(ICrudRepository<Currency> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeleteCurrencyCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Currencies.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.Currencies.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.LoanStatuses.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeleteLoanStatusCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeleteLoanStatusCommandHandler : IRequestHandler<DeleteLoanStatusCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanStatus> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteLoanStatusCommandHandler(IAppDbContext dbContext)
+    public DeleteLoanStatusCommandHandler(ICrudRepository<LoanStatus> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeleteLoanStatusCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.LoanStatuses.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.LoanStatuses.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

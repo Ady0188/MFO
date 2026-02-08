@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Purposes.Commands;
 
@@ -8,16 +8,18 @@ public sealed record UpdatePurposeCommand(Guid Id, ReferenceItemRequest Request)
 
 public sealed class UpdatePurposeCommandHandler : IRequestHandler<UpdatePurposeCommand, ReferenceItemDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Purpose> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdatePurposeCommandHandler(IAppDbContext dbContext)
+    public UpdatePurposeCommandHandler(ICrudRepository<Purpose> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ReferenceItemDto?> Handle(UpdatePurposeCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Purposes.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -27,7 +29,7 @@ public sealed class UpdatePurposeCommandHandler : IRequestHandler<UpdatePurposeC
         entity.Name = request.Request.Name;
         entity.IsActive = request.Request.IsActive;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ReferenceItemDto(entity.Id, entity.Code, entity.Name, entity.IsActive);
     }

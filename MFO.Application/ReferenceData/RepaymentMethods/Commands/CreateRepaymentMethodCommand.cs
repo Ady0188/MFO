@@ -8,11 +8,13 @@ public sealed record CreateRepaymentMethodCommand(ReferenceItemRequest Request) 
 
 public sealed class CreateRepaymentMethodCommandHandler : IRequestHandler<CreateRepaymentMethodCommand, ReferenceItemDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<RepaymentMethod> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateRepaymentMethodCommandHandler(IAppDbContext dbContext)
+    public CreateRepaymentMethodCommandHandler(ICrudRepository<RepaymentMethod> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ReferenceItemDto> Handle(CreateRepaymentMethodCommand request, CancellationToken cancellationToken)
@@ -25,8 +27,8 @@ public sealed class CreateRepaymentMethodCommandHandler : IRequestHandler<Create
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.RepaymentMethods.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ReferenceItemDto(entity.Id, entity.Code, entity.Name, entity.IsActive);
     }

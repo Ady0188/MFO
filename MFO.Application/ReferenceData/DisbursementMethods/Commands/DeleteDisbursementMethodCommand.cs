@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.DisbursementMethods.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeleteDisbursementMethodCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeleteDisbursementMethodCommandHandler : IRequestHandler<DeleteDisbursementMethodCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<DisbursementMethod> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteDisbursementMethodCommandHandler(IAppDbContext dbContext)
+    public DeleteDisbursementMethodCommandHandler(ICrudRepository<DisbursementMethod> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeleteDisbursementMethodCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.DisbursementMethods.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.DisbursementMethods.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.DisbursementMethods.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetDisbursementMethodsQuery : IRequest<IReadOnlyList<Refere
 
 public sealed class GetDisbursementMethodsQueryHandler : IRequestHandler<GetDisbursementMethodsQuery, IReadOnlyList<ReferenceItemDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<DisbursementMethod> _repository;
 
-    public GetDisbursementMethodsQueryHandler(IAppDbContext dbContext)
+    public GetDisbursementMethodsQueryHandler(ICrudRepository<DisbursementMethod> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<IReadOnlyList<ReferenceItemDto>> Handle(GetDisbursementMethodsQuery request, CancellationToken cancellationToken)
     {
-        return await _dbContext.DisbursementMethods
-            .AsNoTracking()
-            .Select(x => new ReferenceItemDto(x.Id, x.Code, x.Name, x.IsActive))
-            .ToListAsync(cancellationToken);
+        var items = await _repository.GetAllAsync(cancellationToken);
+        return items.Select(x => new ReferenceItemDto(x.Id, x.Code, x.Name, x.IsActive)).ToList();
     }
 }

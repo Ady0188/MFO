@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PaymentFrequencies.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetPaymentFrequenciesQuery : IRequest<IReadOnlyList<Payment
 
 public sealed class GetPaymentFrequenciesQueryHandler : IRequestHandler<GetPaymentFrequenciesQuery, IReadOnlyList<PaymentFrequencyDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PaymentFrequency> _repository;
 
-    public GetPaymentFrequenciesQueryHandler(IAppDbContext dbContext)
+    public GetPaymentFrequenciesQueryHandler(ICrudRepository<PaymentFrequency> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<IReadOnlyList<PaymentFrequencyDto>> Handle(GetPaymentFrequenciesQuery request, CancellationToken cancellationToken)
     {
-        return await _dbContext.PaymentFrequencies
-            .AsNoTracking()
-            .Select(x => new PaymentFrequencyDto(x.Id, x.Code, x.Name, x.IntervalDays, x.IsActive))
-            .ToListAsync(cancellationToken);
+        var items = await _repository.GetAllAsync(cancellationToken);
+        return items.Select(x => new PaymentFrequencyDto(x.Id, x.Code, x.Name, x.IntervalDays, x.IsActive)).ToList();
     }
 }

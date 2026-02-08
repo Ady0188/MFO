@@ -8,11 +8,13 @@ public sealed record CreatePenaltyPolicyCommand(PenaltyPolicyRequest Request) : 
 
 public sealed class CreatePenaltyPolicyCommandHandler : IRequestHandler<CreatePenaltyPolicyCommand, PenaltyPolicyDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PenaltyPolicy> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePenaltyPolicyCommandHandler(IAppDbContext dbContext)
+    public CreatePenaltyPolicyCommandHandler(ICrudRepository<PenaltyPolicy> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PenaltyPolicyDto> Handle(CreatePenaltyPolicyCommand request, CancellationToken cancellationToken)
@@ -27,8 +29,8 @@ public sealed class CreatePenaltyPolicyCommandHandler : IRequestHandler<CreatePe
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.PenaltyPolicies.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new PenaltyPolicyDto(entity.Id, entity.Code, entity.Name, entity.PenaltyRate, entity.FixedFee, entity.IsActive);
     }

@@ -8,11 +8,13 @@ public sealed record CreatePaymentFrequencyCommand(PaymentFrequencyRequest Reque
 
 public sealed class CreatePaymentFrequencyCommandHandler : IRequestHandler<CreatePaymentFrequencyCommand, PaymentFrequencyDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PaymentFrequency> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePaymentFrequencyCommandHandler(IAppDbContext dbContext)
+    public CreatePaymentFrequencyCommandHandler(ICrudRepository<PaymentFrequency> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PaymentFrequencyDto> Handle(CreatePaymentFrequencyCommand request, CancellationToken cancellationToken)
@@ -26,8 +28,8 @@ public sealed class CreatePaymentFrequencyCommandHandler : IRequestHandler<Creat
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.PaymentFrequencies.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new PaymentFrequencyDto(entity.Id, entity.Code, entity.Name, entity.IntervalDays, entity.IsActive);
     }

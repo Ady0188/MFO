@@ -8,11 +8,13 @@ public sealed record CreateCurrencyCommand(CurrencyRequest Request) : IRequest<C
 
 public sealed class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrencyCommand, CurrencyDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Currency> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateCurrencyCommandHandler(IAppDbContext dbContext)
+    public CreateCurrencyCommandHandler(ICrudRepository<Currency> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CurrencyDto> Handle(CreateCurrencyCommand request, CancellationToken cancellationToken)
@@ -26,8 +28,8 @@ public sealed class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrenc
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.Currencies.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CurrencyDto(entity.Id, entity.Code, entity.Name, entity.Symbol, entity.IsActive);
     }

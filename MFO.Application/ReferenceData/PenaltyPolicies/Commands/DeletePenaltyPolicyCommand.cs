@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PenaltyPolicies.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeletePenaltyPolicyCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeletePenaltyPolicyCommandHandler : IRequestHandler<DeletePenaltyPolicyCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PenaltyPolicy> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeletePenaltyPolicyCommandHandler(IAppDbContext dbContext)
+    public DeletePenaltyPolicyCommandHandler(ICrudRepository<PenaltyPolicy> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeletePenaltyPolicyCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.PenaltyPolicies.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.PenaltyPolicies.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

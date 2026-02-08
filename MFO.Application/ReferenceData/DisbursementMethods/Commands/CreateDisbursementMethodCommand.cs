@@ -8,11 +8,13 @@ public sealed record CreateDisbursementMethodCommand(ReferenceItemRequest Reques
 
 public sealed class CreateDisbursementMethodCommandHandler : IRequestHandler<CreateDisbursementMethodCommand, ReferenceItemDto>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<DisbursementMethod> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateDisbursementMethodCommandHandler(IAppDbContext dbContext)
+    public CreateDisbursementMethodCommandHandler(ICrudRepository<DisbursementMethod> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ReferenceItemDto> Handle(CreateDisbursementMethodCommand request, CancellationToken cancellationToken)
@@ -25,8 +27,8 @@ public sealed class CreateDisbursementMethodCommandHandler : IRequestHandler<Cre
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.DisbursementMethods.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ReferenceItemDto(entity.Id, entity.Code, entity.Name, entity.IsActive);
     }

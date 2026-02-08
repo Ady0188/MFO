@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MFO.Infrastructure.Authentication;
 
-public sealed class JwtTokenGenerator : IJwtTokenGenerator
+internal sealed class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly JwtOptions _options;
 

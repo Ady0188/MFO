@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Purposes.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeletePurposeCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeletePurposeCommandHandler : IRequestHandler<DeletePurposeCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Purpose> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeletePurposeCommandHandler(IAppDbContext dbContext)
+    public DeletePurposeCommandHandler(ICrudRepository<Purpose> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeletePurposeCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Purposes.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.Purposes.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

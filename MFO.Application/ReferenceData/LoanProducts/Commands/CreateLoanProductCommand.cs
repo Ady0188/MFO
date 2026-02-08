@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
 using MFO.Application.Common.Models;
 using MFO.Domain.Entities;
@@ -10,11 +9,18 @@ public sealed record CreateLoanProductCommand(LoanProductRequest Request) : IReq
 
 public sealed class CreateLoanProductCommandHandler : IRequestHandler<CreateLoanProductCommand, CommandResult<LoanProductDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanProduct> _repository;
+    private readonly IReferenceDataLookupRepository _referenceLookup;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreateLoanProductCommandHandler(IAppDbContext dbContext)
+    public CreateLoanProductCommandHandler(
+        ICrudRepository<LoanProduct> repository,
+        IReferenceDataLookupRepository referenceLookup,
+        IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _referenceLookup = referenceLookup;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CommandResult<LoanProductDto>> Handle(CreateLoanProductCommand request, CancellationToken cancellationToken)
@@ -42,8 +48,8 @@ public sealed class CreateLoanProductCommandHandler : IRequestHandler<CreateLoan
             IsActive = request.Request.IsActive
         };
 
-        _dbContext.LoanProducts.Add(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.AddAsync(entity, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return CommandResult<LoanProductDto>.Success(new LoanProductDto(
             entity.Id,
@@ -65,17 +71,17 @@ public sealed class CreateLoanProductCommandHandler : IRequestHandler<CreateLoan
     {
         var missing = new List<string>();
 
-        if (!await _dbContext.Currencies.AnyAsync(x => x.Id == request.CurrencyId, cancellationToken))
+        if (!await _referenceLookup.CurrencyExistsAsync(request.CurrencyId, cancellationToken))
         {
             missing.Add("Currency");
         }
 
-        if (!await _dbContext.PaymentFrequencies.AnyAsync(x => x.Id == request.PaymentFrequencyId, cancellationToken))
+        if (!await _referenceLookup.PaymentFrequencyExistsAsync(request.PaymentFrequencyId, cancellationToken))
         {
             missing.Add("PaymentFrequency");
         }
 
-        if (!await _dbContext.PenaltyPolicies.AnyAsync(x => x.Id == request.PenaltyPolicyId, cancellationToken))
+        if (!await _referenceLookup.PenaltyPolicyExistsAsync(request.PenaltyPolicyId, cancellationToken))
         {
             missing.Add("PenaltyPolicy");
         }

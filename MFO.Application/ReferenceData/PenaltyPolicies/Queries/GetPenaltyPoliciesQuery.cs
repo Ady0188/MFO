@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PenaltyPolicies.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetPenaltyPoliciesQuery : IRequest<IReadOnlyList<PenaltyPol
 
 public sealed class GetPenaltyPoliciesQueryHandler : IRequestHandler<GetPenaltyPoliciesQuery, IReadOnlyList<PenaltyPolicyDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PenaltyPolicy> _repository;
 
-    public GetPenaltyPoliciesQueryHandler(IAppDbContext dbContext)
+    public GetPenaltyPoliciesQueryHandler(ICrudRepository<PenaltyPolicy> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<IReadOnlyList<PenaltyPolicyDto>> Handle(GetPenaltyPoliciesQuery request, CancellationToken cancellationToken)
     {
-        return await _dbContext.PenaltyPolicies
-            .AsNoTracking()
-            .Select(x => new PenaltyPolicyDto(x.Id, x.Code, x.Name, x.PenaltyRate, x.FixedFee, x.IsActive))
-            .ToListAsync(cancellationToken);
+        var items = await _repository.GetAllAsync(cancellationToken);
+        return items.Select(x => new PenaltyPolicyDto(x.Id, x.Code, x.Name, x.PenaltyRate, x.FixedFee, x.IsActive)).ToList();
     }
 }

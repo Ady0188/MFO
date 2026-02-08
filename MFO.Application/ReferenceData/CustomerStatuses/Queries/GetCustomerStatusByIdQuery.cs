@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.CustomerStatuses.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetCustomerStatusByIdQuery(Guid Id) : IRequest<ReferenceIte
 
 public sealed class GetCustomerStatusByIdQueryHandler : IRequestHandler<GetCustomerStatusByIdQuery, ReferenceItemDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<CustomerStatus> _repository;
 
-    public GetCustomerStatusByIdQueryHandler(IAppDbContext dbContext)
+    public GetCustomerStatusByIdQueryHandler(ICrudRepository<CustomerStatus> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<ReferenceItemDto?> Handle(GetCustomerStatusByIdQuery request, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.CustomerStatuses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var item = await _repository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
         return item is null ? null : new ReferenceItemDto(item.Id, item.Code, item.Name, item.IsActive);
     }

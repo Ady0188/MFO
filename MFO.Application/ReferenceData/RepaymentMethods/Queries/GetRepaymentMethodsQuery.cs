@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.RepaymentMethods.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetRepaymentMethodsQuery : IRequest<IReadOnlyList<Reference
 
 public sealed class GetRepaymentMethodsQueryHandler : IRequestHandler<GetRepaymentMethodsQuery, IReadOnlyList<ReferenceItemDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<RepaymentMethod> _repository;
 
-    public GetRepaymentMethodsQueryHandler(IAppDbContext dbContext)
+    public GetRepaymentMethodsQueryHandler(ICrudRepository<RepaymentMethod> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<IReadOnlyList<ReferenceItemDto>> Handle(GetRepaymentMethodsQuery request, CancellationToken cancellationToken)
     {
-        return await _dbContext.RepaymentMethods
-            .AsNoTracking()
-            .Select(x => new ReferenceItemDto(x.Id, x.Code, x.Name, x.IsActive))
-            .ToListAsync(cancellationToken);
+        var items = await _repository.GetAllAsync(cancellationToken);
+        return items.Select(x => new ReferenceItemDto(x.Id, x.Code, x.Name, x.IsActive)).ToList();
     }
 }

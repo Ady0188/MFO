@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Currencies.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetCurrenciesQuery : IRequest<IReadOnlyList<CurrencyDto>>;
 
 public sealed class GetCurrenciesQueryHandler : IRequestHandler<GetCurrenciesQuery, IReadOnlyList<CurrencyDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Currency> _repository;
 
-    public GetCurrenciesQueryHandler(IAppDbContext dbContext)
+    public GetCurrenciesQueryHandler(ICrudRepository<Currency> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<IReadOnlyList<CurrencyDto>> Handle(GetCurrenciesQuery request, CancellationToken cancellationToken)
     {
-        return await _dbContext.Currencies
-            .AsNoTracking()
-            .Select(x => new CurrencyDto(x.Id, x.Code, x.Name, x.Symbol, x.IsActive))
-            .ToListAsync(cancellationToken);
+        var items = await _repository.GetAllAsync(cancellationToken);
+        return items.Select(x => new CurrencyDto(x.Id, x.Code, x.Name, x.Symbol, x.IsActive)).ToList();
     }
 }

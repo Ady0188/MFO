@@ -3,6 +3,7 @@ using MFO.Application.Common.Interfaces;
 using MFO.Domain.Entities;
 using MFO.Infrastructure.Authentication;
 using MFO.Infrastructure.Persistence;
+using MFO.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,13 +14,17 @@ using System.Text;
 
 namespace MFO.Infrastructure;
 
-public static class DependencyInjection
+internal static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<MfoDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("Postgres")));
-        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<MfoDbContext>());
+        services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IReferenceDataLookupRepository, ReferenceDataLookupRepository>();
+        services.AddScoped(typeof(ICrudRepository<>), typeof(CrudRepository<>));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddIdentityCore<ApplicationUser>(options =>
         {

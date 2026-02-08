@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PaymentFrequencies.Commands;
 
@@ -8,23 +8,25 @@ public sealed record DeletePaymentFrequencyCommand(Guid Id) : IRequest<bool>;
 
 public sealed class DeletePaymentFrequencyCommandHandler : IRequestHandler<DeletePaymentFrequencyCommand, bool>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PaymentFrequency> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeletePaymentFrequencyCommandHandler(IAppDbContext dbContext)
+    public DeletePaymentFrequencyCommandHandler(ICrudRepository<PaymentFrequency> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<bool> Handle(DeletePaymentFrequencyCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.PaymentFrequencies.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return false;
         }
 
-        _dbContext.PaymentFrequencies.Remove(entity);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _repository.RemoveAsync(entity);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

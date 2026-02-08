@@ -1,7 +1,7 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
 using MFO.Application.Common.Models;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.LoanProducts.Commands;
 
@@ -9,16 +9,23 @@ public sealed record UpdateLoanProductCommand(Guid Id, LoanProductRequest Reques
 
 public sealed class UpdateLoanProductCommandHandler : IRequestHandler<UpdateLoanProductCommand, CommandResult<LoanProductDto>>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<LoanProduct> _repository;
+    private readonly IReferenceDataLookupRepository _referenceLookup;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateLoanProductCommandHandler(IAppDbContext dbContext)
+    public UpdateLoanProductCommandHandler(
+        ICrudRepository<LoanProduct> repository,
+        IReferenceDataLookupRepository referenceLookup,
+        IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _referenceLookup = referenceLookup;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CommandResult<LoanProductDto>> Handle(UpdateLoanProductCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.LoanProducts.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return CommandResult<LoanProductDto>.NotFound();
@@ -43,7 +50,7 @@ public sealed class UpdateLoanProductCommandHandler : IRequestHandler<UpdateLoan
         entity.PenaltyPolicyId = request.Request.PenaltyPolicyId;
         entity.IsActive = request.Request.IsActive;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return CommandResult<LoanProductDto>.Success(new LoanProductDto(
             entity.Id,
@@ -65,17 +72,17 @@ public sealed class UpdateLoanProductCommandHandler : IRequestHandler<UpdateLoan
     {
         var missing = new List<string>();
 
-        if (!await _dbContext.Currencies.AnyAsync(x => x.Id == request.CurrencyId, cancellationToken))
+        if (!await _referenceLookup.CurrencyExistsAsync(request.CurrencyId, cancellationToken))
         {
             missing.Add("Currency");
         }
 
-        if (!await _dbContext.PaymentFrequencies.AnyAsync(x => x.Id == request.PaymentFrequencyId, cancellationToken))
+        if (!await _referenceLookup.PaymentFrequencyExistsAsync(request.PaymentFrequencyId, cancellationToken))
         {
             missing.Add("PaymentFrequency");
         }
 
-        if (!await _dbContext.PenaltyPolicies.AnyAsync(x => x.Id == request.PenaltyPolicyId, cancellationToken))
+        if (!await _referenceLookup.PenaltyPolicyExistsAsync(request.PenaltyPolicyId, cancellationToken))
         {
             missing.Add("PenaltyPolicy");
         }

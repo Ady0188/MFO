@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Currencies.Commands;
 
@@ -8,16 +8,18 @@ public sealed record UpdateCurrencyCommand(Guid Id, CurrencyRequest Request) : I
 
 public sealed class UpdateCurrencyCommandHandler : IRequestHandler<UpdateCurrencyCommand, CurrencyDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Currency> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdateCurrencyCommandHandler(IAppDbContext dbContext)
+    public UpdateCurrencyCommandHandler(ICrudRepository<Currency> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CurrencyDto?> Handle(UpdateCurrencyCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.Currencies.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -28,7 +30,7 @@ public sealed class UpdateCurrencyCommandHandler : IRequestHandler<UpdateCurrenc
         entity.Symbol = request.Request.Symbol;
         entity.IsActive = request.Request.IsActive;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CurrencyDto(entity.Id, entity.Code, entity.Name, entity.Symbol, entity.IsActive);
     }

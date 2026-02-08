@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MFO.Infrastructure.Authentication;
 
-public sealed class JwtOptions
+internal sealed class JwtOptions
 {
     public string Issuer { get; init; } = string.Empty;
     public string Audience { get; init; } = string.Empty;

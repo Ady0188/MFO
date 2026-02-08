@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.Purposes.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetPurposeByIdQuery(Guid Id) : IRequest<ReferenceItemDto?>;
 
 public sealed class GetPurposeByIdQueryHandler : IRequestHandler<GetPurposeByIdQuery, ReferenceItemDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<Purpose> _repository;
 
-    public GetPurposeByIdQueryHandler(IAppDbContext dbContext)
+    public GetPurposeByIdQueryHandler(ICrudRepository<Purpose> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<ReferenceItemDto?> Handle(GetPurposeByIdQuery request, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.Purposes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var item = await _repository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
         return item is null ? null : new ReferenceItemDto(item.Id, item.Code, item.Name, item.IsActive);
     }

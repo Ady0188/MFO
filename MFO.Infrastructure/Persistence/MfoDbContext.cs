@@ -1,4 +1,3 @@
-using MFO.Application.Common.Interfaces;
 using MFO.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +5,7 @@ using System;
 
 namespace MFO.Infrastructure.Persistence;
 
-public sealed class MfoDbContext : IdentityDbContext<ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>, IAppDbContext
+internal sealed class MfoDbContext : IdentityDbContext<ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole<Guid>, Guid>
 {
     public MfoDbContext(DbContextOptions<MfoDbContext> options) : base(options)
     {

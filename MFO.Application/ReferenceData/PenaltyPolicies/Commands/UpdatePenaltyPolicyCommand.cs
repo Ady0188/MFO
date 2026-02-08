@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PenaltyPolicies.Commands;
 
@@ -8,16 +8,18 @@ public sealed record UpdatePenaltyPolicyCommand(Guid Id, PenaltyPolicyRequest Re
 
 public sealed class UpdatePenaltyPolicyCommandHandler : IRequestHandler<UpdatePenaltyPolicyCommand, PenaltyPolicyDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PenaltyPolicy> _repository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdatePenaltyPolicyCommandHandler(IAppDbContext dbContext)
+    public UpdatePenaltyPolicyCommandHandler(ICrudRepository<PenaltyPolicy> repository, IUnitOfWork unitOfWork)
     {
-        _dbContext = dbContext;
+        _repository = repository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<PenaltyPolicyDto?> Handle(UpdatePenaltyPolicyCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _dbContext.PenaltyPolicies.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var entity = await _repository.GetByIdAsync(request.Id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -29,7 +31,7 @@ public sealed class UpdatePenaltyPolicyCommandHandler : IRequestHandler<UpdatePe
         entity.FixedFee = request.Request.FixedFee;
         entity.IsActive = request.Request.IsActive;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new PenaltyPolicyDto(entity.Id, entity.Code, entity.Name, entity.PenaltyRate, entity.FixedFee, entity.IsActive);
     }

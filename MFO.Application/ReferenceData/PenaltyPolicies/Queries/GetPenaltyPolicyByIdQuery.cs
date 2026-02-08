@@ -1,6 +1,6 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MFO.Application.Common.Interfaces;
+using MFO.Domain.Entities;
 
 namespace MFO.Application.ReferenceData.PenaltyPolicies.Queries;
 
@@ -8,18 +8,16 @@ public sealed record GetPenaltyPolicyByIdQuery(Guid Id) : IRequest<PenaltyPolicy
 
 public sealed class GetPenaltyPolicyByIdQueryHandler : IRequestHandler<GetPenaltyPolicyByIdQuery, PenaltyPolicyDto?>
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly ICrudRepository<PenaltyPolicy> _repository;
 
-    public GetPenaltyPolicyByIdQueryHandler(IAppDbContext dbContext)
+    public GetPenaltyPolicyByIdQueryHandler(ICrudRepository<PenaltyPolicy> repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
 
     public async Task<PenaltyPolicyDto?> Handle(GetPenaltyPolicyByIdQuery request, CancellationToken cancellationToken)
     {
-        var item = await _dbContext.PenaltyPolicies
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+        var item = await _repository.GetByIdAsNoTrackingAsync(request.Id, cancellationToken);
 
         return item is null ? null : new PenaltyPolicyDto(item.Id, item.Code, item.Name, item.PenaltyRate, item.FixedFee, item.IsActive);
     }
