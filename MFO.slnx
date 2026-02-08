@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="MFO.Api/MFO.Api.csproj" />
+  <Project Path="MFO.Application/MFO.Application.csproj" />
+  <Project Path="MFO.Domain/MFO.Domain.csproj" />
+  <Project Path="MFO.Infrastructure/MFO.Infrastructure.csproj" />
+</Solution>

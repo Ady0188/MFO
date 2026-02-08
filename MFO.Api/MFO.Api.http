@@ -1,0 +1,24 @@
+﻿@MFO.Api_HostAddress = http://localhost:5244
+
+GET {{MFO.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+POST {{MFO.Api_HostAddress}}/api/auth/login
+Accept: application/json
+Content-Type: application/json
+{
+  "Email": "adab@test.comег",
+  "Password": "Passw0rd"
+}
+
+###
+POST {{MFO.Api_HostAddress}}/api/auth/register
+Accept: application/json
+Content-Type: application/json
+{
+  "Email": "adab@test.com",
+  "Password": "Passw0rd",
+  "FirstName": "Adab",
+  "LastName": "Saidmirzoev"
+}
